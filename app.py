@@ -4,7 +4,7 @@
 # Primera Carga a Github
 # git init
 # git add .
-# git remote add origin https://github.com/nicoig/speech-to-text.git
+# git remote add origin https://github.com/nicoig/text-to-speech.git
 # git commit -m "Initial commit"
 # git push -u origin master
 
@@ -30,8 +30,8 @@ import os
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 
-# Función Audio a Texto
-def audio_to_text(audio_file):
+# Función Texto a Voz
+def tts(text, model, voice):
     if api_key == '':
         st.error('Por favor, configura tu clave API de OpenAI en el archivo .env')
         return None
@@ -39,39 +39,30 @@ def audio_to_text(audio_file):
         try:
             client = OpenAI(api_key=api_key)
 
-            # Se asume que el archivo es un objeto tipo BytesIO
-            transcriptions = client.audio.transcriptions.create(
-                model="whisper-1",
-                file=audio_file,
-                response_format="text"
+            response = client.audio.speech.create(
+                model=model, # "tts-1", "tts-1-hd"
+                voice=voice, # 'alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'
+                input=text,
             )
-            return transcriptions
-
+            return response.content
         except Exception as error:
-            st.error(f"Se produjo un error al procesar el audio: {error}")
+            st.error(f"Se produjo un error al generar el habla: {error}")
             return None
 
 # Diseño de la Aplicación Streamlit
-st.title("Audio a Texto con OpenAI")
+st.title("API de Texto a Voz de OpenAI con Streamlit")
 
-# Inicializar la variable de estado
-if 'transcription_result' not in st.session_state:
-    st.session_state.transcription_result = ""
+model = st.selectbox("Modelo", ['tts-1', 'tts-1-hd'], index=0)
+voice = st.selectbox("Opciones de Voz", ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'], index=0)
 
-uploaded_file = st.file_uploader("Sube un archivo de audio", type=['mp3', 'wav'], on_change=lambda: setattr(st.session_state, 'transcription_result', ''))
+# Variable de estado para el campo de texto
+text = st.text_area("Ingresa el texto:", "", key="text_state")
 
-if uploaded_file is not None and st.button("Enviar"):
+if st.button("Enviar"):
     with st.spinner('Cargando...'):
-        text_result = audio_to_text(uploaded_file)
-        if text_result is not None:
-            st.session_state.transcription_result = text_result
-            st.success('Transcripción completada')
+        audio_content = tts(text, model, voice)
+        if audio_content is not None:
+            st.success('Se ha generado el audio')
+            st.audio(audio_content, format="audio/mp3")
 
-if st.session_state.transcription_result:
-    st.text_area("Texto resultante:", st.session_state.transcription_result, height=300)
-    st.download_button(
-        label="Descargar Texto",
-        data=st.session_state.transcription_result,
-        file_name="transcripcion.txt",
-        mime="text/plain"
-    )
+# Ejecuta este script con: streamlit run app.py
