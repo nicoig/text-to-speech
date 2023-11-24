@@ -17,6 +17,10 @@
 # agregar en variables de entorno
 # PYTHON_VERSION = 3.9.12
 
+# git remote set-url origin https://github.com/nicoig/text-to-speech.git
+# git remote -v
+# git push -u origin main
+
 ################################################
 
 
@@ -65,4 +69,3 @@ if st.button("Enviar"):
             st.success('Se ha generado el audio')
             st.audio(audio_content, format="audio/mp3")
 
-# Ejecuta este script con: streamlit run app.py
