@@ -29,6 +29,7 @@ import streamlit as st
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
+import tempfile
 
 # Cargar variables de entorno
 load_dotenv()
@@ -67,5 +68,10 @@ if st.button("Enviar"):
         audio_content = tts(text, model, voice)
         if audio_content is not None:
             st.success('Se ha generado el audio')
-            st.audio(audio_content, format="audio/mp3")
-
+            # Guardar el audio en un archivo temporal
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
+                tmp_file.write(audio_content)
+                tmp_file_path = tmp_file.name
+            # Mostrar el audio y el botón de descarga
+            st.audio(tmp_file_path, format="audio/mp3")
+            st.download_button(label="Descargar Audio", data=audio_content, file_name="audio_generado.mp3", mime="audio/mp3")
